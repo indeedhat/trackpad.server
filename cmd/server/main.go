@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -39,7 +38,6 @@ func websocketHandler(rw http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		log.Println(string(message))
 		cmdParts := strings.Split(string(message), ",")
 		if len(cmdParts) == 0 {
 			continue
@@ -89,7 +87,6 @@ func websocketHandler(rw http.ResponseWriter, r *http.Request) {
 					kb.SetKeys(keybd_event.VK_BACKSPACE)
 					_ = kb.Launching()
 				} else {
-
 					robotgo.UnicodeType(uint32(code))
 				}
 			}
