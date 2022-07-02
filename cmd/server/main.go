@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -9,13 +8,19 @@ import (
 
 	"github.com/go-vgo/robotgo"
 	"github.com/gorilla/websocket"
+	"github.com/micmonay/keybd_event"
 )
 
 const addr = ":8881"
 
 var upgrader = websocket.Upgrader{}
+var kb *keybd_event.KeyBonding
 
 func main() {
+	if _kb, err := keybd_event.NewKeyBonding(); err == nil {
+		kb = &_kb
+	}
+
 	http.HandleFunc("/ws", websocketHandler)
 
 	http.ListenAndServe(addr, nil)
@@ -78,9 +83,15 @@ func websocketHandler(rw http.ResponseWriter, r *http.Request) {
 			}
 
 			code, err := strconv.Atoi(cmdParts[1])
+
 			if err == nil {
-				fmt.Println(code)
-				robotgo.UnicodeType(uint32(code))
+				if code == 2408 {
+					kb.SetKeys(keybd_event.VK_BACKSPACE)
+					_ = kb.Launching()
+				} else {
+
+					robotgo.UnicodeType(uint32(code))
+				}
 			}
 		}
 
