@@ -1,16 +1,24 @@
 package main
 
 import (
+	"fmt"
+	"log"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-vgo/robotgo"
 	"github.com/gorilla/websocket"
 	"github.com/micmonay/keybd_event"
 )
 
-const addr = ":8881"
+const (
+	httpAddress       = ":8881"
+	multiCastAddress  = "239.2.39.0:8181"
+	discoveryInterval = 5
+)
 
 var upgrader = websocket.Upgrader{}
 var kb *keybd_event.KeyBonding
@@ -20,9 +28,11 @@ func main() {
 		kb = &_kb
 	}
 
-	http.HandleFunc("/ws", websocketHandler)
+	done := make(chan struct{})
+	go broadcastExistence(done)
 
-	http.ListenAndServe(addr, nil)
+	http.HandleFunc("/ws", websocketHandler)
+	http.ListenAndServe(httpAddress, nil)
 }
 
 func websocketHandler(rw http.ResponseWriter, r *http.Request) {
@@ -93,5 +103,28 @@ func websocketHandler(rw http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+	}
+}
+
+func broadcastExistence(done chan struct{}) {
+	addr, err := net.ResolveUDPAddr("udp4", multiCastAddress)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	conn, err := net.DialUDP("udp4", nil, addr)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ticker := time.NewTicker(discoveryInterval * time.Second)
+	for {
+		select {
+		case <-ticker.C:
+			log.Print("sending existence")
+			conn.Write([]byte(fmt.Sprintf("trackpad.server;%s;", httpAddress[1:])))
+		case <-done:
+			break
+		}
 	}
 }
