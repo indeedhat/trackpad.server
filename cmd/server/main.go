@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -117,11 +118,16 @@ func broadcastExistence(done chan struct{}) {
 		log.Fatal(err)
 	}
 
+	hostname, err := os.Hostname()
+	if err != nil {
+		hostname = "Unknown"
+	}
+
 	ticker := time.NewTicker(discoveryInterval * time.Second)
 	for {
 		select {
 		case <-ticker.C:
-			conn.Write([]byte(fmt.Sprintf("trackpad.server;%s;", httpAddress[1:])))
+			conn.Write([]byte(fmt.Sprintf("trackpad.server;%s;%s;", httpAddress[1:], hostname)))
 		case <-done:
 			break
 		}
