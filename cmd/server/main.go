@@ -121,7 +121,6 @@ func broadcastExistence(done chan struct{}) {
 	for {
 		select {
 		case <-ticker.C:
-			log.Print("sending existence")
 			conn.Write([]byte(fmt.Sprintf("trackpad.server;%s;", httpAddress[1:])))
 		case <-done:
 			break
