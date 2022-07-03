@@ -82,10 +82,14 @@ func websocketHandler(rw http.ResponseWriter, r *http.Request) {
 			// robotgo.ScrollRelative(int(x), int(y))
 
 		case "click":
-			if len(cmdParts) != 2 {
+			if len(cmdParts) != 3 {
 				break
 			}
-			robotgo.Click(cmdParts[1])
+			if cmdParts[2] == "true" {
+				robotgo.Toggle(cmdParts[1], "down")
+			} else {
+				robotgo.Toggle(cmdParts[1], "up")
+			}
 
 		case "keeb":
 			if len(cmdParts) != 2 {
