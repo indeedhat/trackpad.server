@@ -67,7 +67,8 @@ func websocketHandler(rw http.ResponseWriter, r *http.Request) {
 				y = 1
 			}
 
-			robotgo.ScrollRelative(int(x), int(y))
+			// this continues infinately
+			// robotgo.ScrollRelative(int(x), int(y))
 
 		case "click":
 			if len(cmdParts) != 2 {
