@@ -48,6 +48,9 @@ func WebsocketHandler(kb *keybd_event.KeyBonding) func(rw http.ResponseWriter, r
 				processClickMessage(cmdParts)
 			case "keeb":
 				processKeebMessage(cmdParts, kb)
+			case "zoom":
+				processZoomMessage(cmdParts)
+
 			}
 		}
 	}
@@ -145,12 +148,34 @@ func processKeebMessage(cmdParts []string, kb *keybd_event.KeyBonding) {
 
 	code, err := strconv.Atoi(cmdParts[1])
 
-	if err == nil {
-		if code == 2408 {
-			kb.SetKeys(keybd_event.VK_BACKSPACE)
-			_ = kb.Launching()
-		} else {
-			robotgo.UnicodeType(uint32(code))
-		}
+	if err != nil {
+		return
 	}
+
+	if code == 2408 {
+		kb.SetKeys(keybd_event.VK_BACKSPACE)
+		_ = kb.Launching()
+	} else {
+		robotgo.UnicodeType(uint32(code))
+	}
+}
+
+func processZoomMessage(cmdParts []string) {
+	if len(cmdParts) != 2 {
+		return
+	}
+
+	direction, err := strconv.ParseFloat(cmdParts[1], 32)
+	if err != nil {
+		return
+	}
+
+	key := "-"
+	if direction > 1 {
+		// this seems to work in most places that + deos and some that + deos not
+		key = "="
+	}
+	robotgo.KeyDown("ctrl")
+	robotgo.KeyTap(key)
+	robotgo.KeyUp("ctrl")
 }
