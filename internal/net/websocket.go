@@ -1,6 +1,7 @@
 package net
 
 import (
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -102,18 +103,28 @@ func processScrollMessage(cmdParts []string) {
 	if len(cmdParts) != 3 {
 		return
 	}
-	x, _ := strconv.ParseFloat(cmdParts[1], 32)
-	y, _ := strconv.ParseFloat(cmdParts[2], 32)
-	if x > y {
-		y = 0
-		x = 1
+
+	var (
+		x int
+		y int
+	)
+	ix, _ := strconv.ParseFloat(cmdParts[1], 32)
+	iy, _ := strconv.ParseFloat(cmdParts[2], 32)
+	if math.Abs(ix) > math.Abs(iy) {
+		x = scrollDistance(ix)
 	} else {
-		x = 0
-		y = 1
+		y = scrollDistance(iy)
 	}
 
-	// this continues infinately
-	// robotgo.ScrollRelative(int(x), int(y))
+	robotgo.Scroll(int(x), int(y), 0)
+}
+
+func scrollDistance(input float64) int {
+	if input > 0 {
+		return 1
+	} else {
+		return -1
+	}
 }
 
 func processClickMessage(cmdParts []string) {
