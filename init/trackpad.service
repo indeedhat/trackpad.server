@@ -1,0 +1,12 @@
+[Unit]
+Description=trackpad server
+
+[Service]
+Type=simple
+WorkingDirectory=$HOME/path/to/serverdir
+ExecStart=$HOME/path/to/serverdir/server
+Restart=always
+RestartSec=2s
+
+[Install]
+WantedBy=default.target
