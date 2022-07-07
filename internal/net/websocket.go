@@ -15,7 +15,10 @@ import (
 var upgrader = websocket.Upgrader{}
 
 // WebsocketHandler for managing main connection to app
-func WebsocketHandler(kb *keybd_event.KeyBonding) func(rw http.ResponseWriter, r *http.Request) {
+func WebsocketHandler(
+	kb *keybd_event.KeyBonding,
+	v func(string, ...any),
+) func(rw http.ResponseWriter, r *http.Request) {
 	serverPass := env.Get(env.ConnetPass)
 
 	return func(rw http.ResponseWriter, r *http.Request) {
@@ -25,7 +28,7 @@ func WebsocketHandler(kb *keybd_event.KeyBonding) func(rw http.ResponseWriter, r
 		}
 		defer con.Close()
 
-		if err := awaitPassword(con, serverPass); err != nil {
+		if err := awaitPassword(con, serverPass, v); err != nil {
 			return
 		}
 
@@ -39,6 +42,7 @@ func WebsocketHandler(kb *keybd_event.KeyBonding) func(rw http.ResponseWriter, r
 				continue
 			}
 
+			v("%v", cmdParts)
 			switch cmdParts[0] {
 			case "move":
 				processMoveMessage(cmdParts)
@@ -65,13 +69,15 @@ func readMessage(con *websocket.Conn) ([]string, error) {
 	return strings.Split(string(message), ";"), nil
 }
 
-func awaitPassword(con *websocket.Conn, serverPass string) error {
+func awaitPassword(con *websocket.Conn, serverPass string, v func(string, ...any)) error {
 	if serverPass == "" {
-		con.WriteMessage(websocket.TextMessage, []byte("authenticated"))
+		con.WriteMessage(websocket.TextMessage, []byte("auth;true"))
+		v("auth;true")
 		return nil
 	}
 
-	con.WriteMessage(websocket.TextMessage, []byte("waiting"))
+	con.WriteMessage(websocket.TextMessage, []byte("auth;false"))
+	v("auth;false")
 
 	for {
 		cmdParts, err := readMessage(con)
@@ -84,11 +90,13 @@ func awaitPassword(con *websocket.Conn, serverPass string) error {
 		}
 
 		if cmdParts[1] == serverPass {
-			con.WriteMessage(websocket.TextMessage, []byte("authenticated"))
+			con.WriteMessage(websocket.TextMessage, []byte("auth;true"))
+			v("auth;true")
 			return nil
 		}
 
-		con.WriteMessage(websocket.TextMessage, []byte("waiting"))
+		con.WriteMessage(websocket.TextMessage, []byte("auth;false"))
+		v("auth;false")
 	}
 }
 
